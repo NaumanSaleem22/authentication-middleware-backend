@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const authMiddleware = require("../middleware/auth.middleware");
+const checkProductOwner = require("../middleware/productOwner.middleware");
 const {
     createProduct,
     getProducts,
@@ -11,11 +12,12 @@ const {
 
 const router = express.Router();
 
-const upload = multer({storage: multer.memoryStorage()});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // CREATE
 router.post(
     "/create-product",
+    authMiddleware,
     upload.single("image"),
     createProduct
 );
@@ -23,7 +25,7 @@ router.post(
 // GET ALL
 router.get(
     "/products",
-     authMiddleware,
+    authMiddleware,
     getProducts
 );
 
@@ -31,6 +33,8 @@ router.get(
 // GET SINGLE
 router.get(
     "/products/:id",
+    authMiddleware,
+    checkProductOwner,
     getProduct
 );
 
@@ -38,6 +42,8 @@ router.get(
 // UPDATE
 router.patch(
     "/products/:id",
+    authMiddleware,
+    checkProductOwner,
     upload.single("image"),
     updateProduct
 );
@@ -46,6 +52,8 @@ router.patch(
 // DELETE
 router.delete(
     "/products/:id",
+    authMiddleware,
+    checkProductOwner,
     deleteProduct
 );
 

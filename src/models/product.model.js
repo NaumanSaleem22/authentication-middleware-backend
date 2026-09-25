@@ -19,6 +19,12 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
+    // user ki id add krdi to verify that kis user ne konsa product banaaaya
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        required: true
+    },
 })
 
 const productModel = mongoose.model("product", productSchema)
