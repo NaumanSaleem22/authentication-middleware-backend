@@ -4,6 +4,10 @@ const productSchema = new mongoose.Schema({
     image: {
         type: String
     },
+    imageId: {
+        type: String,
+        required: true
+    },
     name: {
         type: String,
         required: true,
@@ -25,6 +29,7 @@ const productSchema = new mongoose.Schema({
         ref: "user",
         required: true
     },
+    
 })
 
 const productModel = mongoose.model("product", productSchema)

@@ -1,5 +1,5 @@
 const productModel = require("../models/product.model");
-const uploadFile = require("../services/storage.service");
+const { uploadFile, deleteFile } = require("../services/storage.service");
 const asyncHandler = require("../middleware/asyncHandler");
 
 
@@ -17,6 +17,7 @@ const createProduct = asyncHandler(async (req, res) => {
     const product = await productModel.create({
         userId: req.user.userId,
         image: result.url,
+        imageId: result.fileId,
         name: req.body.name,
         desc: req.body.desc,
         price: req.body.price,
@@ -36,7 +37,7 @@ const getProducts = asyncHandler(async (req, res) => {
 
     const products = await productModel.find({
         userId: req.user.userId
-    })
+    }).populate("userId", "name");
 
     return res.status(200).json({
         message: "Products fetched successfully",
@@ -76,10 +77,15 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 
     if (req.file) {
+        const oldImageId = req.product.imageId;
 
         const result = await uploadFile(req.file.buffer)
+        updateData.image = result.url;
+        updateData.imageId = result.fileId;
 
-        updateData.image = result.url
+        if (oldImageId) {
+            await deleteFile(oldImageId);
+        }
     }
 
     const updatedProduct = await productModel.findByIdAndUpdate(
@@ -111,10 +117,21 @@ const deleteProduct = asyncHandler(async (req, res) => {
 })
 
 
+// Admin Get Products
+const getAllProductsAdmin = asyncHandler(async (req, res) => {
+    const products = await productModel.find().populate("userId", "name");;
+
+    return res.status(200).json({
+        message: "All products fetched successfully",
+        products
+    });
+});
+
 module.exports = {
     createProduct,
     getProducts,
     getProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getAllProductsAdmin
 }

@@ -1,9 +1,11 @@
 const bcrypt = require("bcrypt");
 const userModel = require("../models/user.model");
+const productModel = require("../models/product.model");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("../middleware/asyncHandler");
-
-
+const {
+    deleteFile
+} = require("../services/storage.service");
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
 
@@ -42,7 +44,8 @@ const registerUser = asyncHandler(async (req, res) => {
         user: {
             id: user._id,
             name: user.name,
-            email: user.email
+            email: user.email,
+            role: user.role
         }
     });
 });
@@ -84,11 +87,13 @@ const loginUser = asyncHandler(async (req, res) => {
     // Create JWT
     const token = jwt.sign(
         {
-            userId: user._id
+            userId: user._id,
+            role: user.role
         },
-        process.env.JWT_SECRET, {
-        expiresIn: "1d"
-    }
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "1d"
+        }
     );
 
     return res.status(200).json({
@@ -102,16 +107,84 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
 
-    const users = await userModel.find()
+    const users = await userModel.find().select("-password");
 
     return res.status(200).json({
+        message: "All users fetched successfully",
         users
     })
 })
 
 
+// Admin Delete User
+const deleteUser = asyncHandler(async (req, res) => {
+
+    if (req.user.userId == req.userToManage._id.toString()) {
+        return res.status(400).json({
+            message: "Admin cannot delete their own account"
+        });
+    }
+    const products = await productModel.find({
+        userId: req.userToManage._id
+    });
+
+    for (const product of products) {
+
+        if (product.imageId) {
+            await deleteFile(product.imageId);
+        }
+
+    }
+    await productModel.deleteMany({
+        userId: req.userToManage._id
+    });
+
+    await userModel.findByIdAndDelete(req.userToManage._id);
+
+    return res.status(200).json({
+        message: "User deleted successfully"
+    });
+})
+
+
+// Admin Update User
+
+const updateUser = asyncHandler(async (req, res) => {
+    const updateData = {};
+
+    if (req.body.name !== undefined) {
+        updateData.name = req.body.name;
+    }
+
+    if (req.body.email !== undefined) {
+        updateData.email = req.body.email;
+    }
+
+    if (req.body.role !== undefined) {
+        updateData.role = req.body.role;
+    }
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+        req.userToManage._id,
+        updateData, {
+        new: true,
+        runValidators: true
+    }
+    ).select("-password")
+
+    return res.status(200).json({
+        message: "User and their products deleted successfully",
+        user: updatedUser
+    });
+
+})
+
+
+
 module.exports = {
     registerUser,
     loginUser,
-    getAllUsers
-}
+    getAllUsers,
+    deleteUser,
+    updateUser
+};

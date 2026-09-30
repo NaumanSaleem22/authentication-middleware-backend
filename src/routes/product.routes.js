@@ -1,13 +1,16 @@
 const express = require("express");
 const multer = require("multer");
 const authMiddleware = require("../middleware/auth.middleware");
+const adminMiddleware = require("../middleware/admin.middleware");
 const checkProductOwner = require("../middleware/productOwner.middleware");
+const findProduct = require("../middleware/findProduct.middleware");
 const {
     createProduct,
     getProducts,
     getProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getAllProductsAdmin, 
 } = require("../controllers/product.controller");
 
 const router = express.Router();
@@ -54,6 +57,33 @@ router.delete(
     "/products/:id",
     authMiddleware,
     checkProductOwner,
+    deleteProduct
+);
+
+// Admin GET
+router.get(
+    "/admin/products",
+    authMiddleware,
+    adminMiddleware,
+    getAllProductsAdmin
+);
+
+// Admin Update
+router.patch(
+    "/admin/products/:id",
+    authMiddleware,
+    adminMiddleware,
+    findProduct,
+    upload.single("image"),
+    updateProduct
+);
+
+// Admin Update
+router.delete(
+    "/admin/delete/:id",
+    authMiddleware,
+    adminMiddleware,
+    findProduct,
     deleteProduct
 );
 
