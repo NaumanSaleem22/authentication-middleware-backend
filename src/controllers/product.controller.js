@@ -107,7 +107,9 @@ const updateProduct = asyncHandler(async (req, res) => {
 
 // DELETE PRODUCT
 const deleteProduct = asyncHandler(async (req, res) => {
-
+    if (req.product.imageId) {
+        await deleteFile(req.product.imageId);
+    }
     await productModel.findByIdAndDelete(req.product._id)
 
     return res.status(200).json({

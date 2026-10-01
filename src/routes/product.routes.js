@@ -68,6 +68,15 @@ router.get(
     getAllProductsAdmin
 );
 
+// Admin get single product
+router.get(
+    "/admin/products/:id",
+    authMiddleware,
+    adminMiddleware,
+    findProduct,
+    getProduct
+);
+
 // Admin Update
 router.patch(
     "/admin/products/:id",
@@ -86,6 +95,7 @@ router.delete(
     findProduct,
     deleteProduct
 );
+
 
 
 module.exports = router;
